@@ -1,4 +1,5 @@
 import random
+import os
 
 def generate_tests():
     n = 20
@@ -11,7 +12,9 @@ def generate_tests():
             weights.append(random.randint(1, 100))
             vals.append(random.randint(1, 100))
 
-        f = open(f'tests/test{i}.in', 'w')
+        os.makedirs('tests/in', exist_ok=True)
+
+        f = open(f'tests/in/test{i}.in', 'w')
 
         f.write(f'{n} {random.randint(1, 1000)} \n')
 

@@ -1,7 +1,22 @@
 import random
 
 
-def hill_climb(weights, vals, n, capacity):
+def generate_initial_solution(weights, n, capacity):
+    initial_solution = [random.choice([0, 1]) for _ in range(n)]
+
+    total_weight = sum(weights[i] for i in range(n) if initial_solution[i] == 1)
+    included_idx = [i for i in range(n) if initial_solution[i] == 1]
+
+    while total_weight > capacity:
+        idx = random.choice(included_idx)
+        included_idx.remove(idx)
+        initial_solution[idx] = 0
+        total_weight -= weights[idx]
+
+    return initial_solution
+
+
+def hill_climb(weights, vals, n, capacity, initial_solution):
     def evaluate(solution):
         sum_weights = sum(weights[i] if solution[i] == 1 else 0 for i in range(n))
         sum_vals = sum(vals[i] if solution[i] == 1 else 0 for i in range(n))
@@ -19,15 +34,6 @@ def hill_climb(weights, vals, n, capacity):
             neighbors.append(neighbor)
 
         return neighbors
-
-    initial_solution = [random.choice([0, 1]) for _ in range(n)]
-    total_weight = sum(weights[i] for i in range(n) if initial_solution[i] == 1)
-    included_idx = [i for i in range(n) if initial_solution[i] == 1]
-    while total_weight > capacity:
-        idx = random.choice(included_idx)
-        included_idx.remove(idx)
-        initial_solution[idx] = 0
-        total_weight -= weights[idx]
 
     current_solution = initial_solution
     current_score = evaluate(current_solution)
@@ -52,13 +58,17 @@ def hill_climb(weights, vals, n, capacity):
     return current_score, included_idx, iter
 
 
-def random_restart_hill_climb(weights, vals, n, capacity, num_restarts):
+def random_restart_hill_climb(
+    weights, vals, n, capacity, num_restarts, initial_solutions
+):
     best_score = -1
     best_solution = []
     best_iter = 0
 
-    for _ in range(num_restarts):
-        score, solution, iter = hill_climb(weights, vals, n, capacity)
+    for i in range(num_restarts):
+        score, solution, iter = hill_climb(
+            weights, vals, n, capacity, initial_solutions[i]
+        )
 
         if score > best_score:
             best_score = score
