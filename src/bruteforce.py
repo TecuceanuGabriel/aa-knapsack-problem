@@ -5,7 +5,6 @@
     can be obtained without exceeding the weight limit.
 """
 
-
 def brute_force(weights, vals, n, g):
     if n == 0 or g == 0:
         return 0, []

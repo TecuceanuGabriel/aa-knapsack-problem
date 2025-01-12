@@ -6,7 +6,7 @@ def top_down(weights, vals, n, capacity, memo):
     if n == 0 or capacity == 0:
         return 0, []
 
-    if memo[n][capacity][0] != -1 and memo[n][capacity][1] != []:
+    if memo[n][capacity] != (-1, []):
         return memo[n][capacity]
 
     if weights[n - 1] > capacity:

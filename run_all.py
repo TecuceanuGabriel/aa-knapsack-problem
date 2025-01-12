@@ -1,52 +1,113 @@
-from tests.generate_tests import generate_tests
+from tests.generate_tests import generate_tests, test_sizes, scenarios, capacities
 
 from src.bruteforce import brute_force
 from src.dp import top_down, bottom_up
 from src.greedy import greedy_helper, GreedyHeuristic
 from src.branch_bound import branch_and_bound
 from src.hill_climb import (
-    hill_climb,
-    random_restart_hill_climb,
     generate_initial_solution,
+    simulated_annealing,
 )
 
+from src.data_point import DataPoint
+
 import timeit
+import time
 import os
+import sys
+import math
+import signal
+import json
 
-NR_RUNS = 10
+sys.setrecursionlimit(10**6)
 
+NR_RUNS = 5
+
+class TimeoutException(Exception):
+    pass
+
+def timeout_handler(signum, frame):
+    raise TimeoutException("Timed out")
+
+signal.signal(signal.SIGALRM, timeout_handler)
+
+Data = {}
 
 def run_test():
-    for i in range(5):
-        # read
-        f = open(f"tests/in/test{i}.in", "r")
+    test_nr = 0
+    Data = {}
 
-        n, capacity = map(int, f.readline().split())
+    for c in capacities:
+        Data[c] = {}
+        for s in scenarios:
+            Data[c][s] = {}
 
-        print(n, capacity)
+            Data[c][s]["bf"] = []
+            Data[c][s]["dp_td"] = []
+            Data[c][s]["dp_bu"] = []
+            Data[c][s]["bb"] = []
 
-        weights = []
-        vals = []
+            Data[c][s]["greedy_r"] = []
+            Data[c][s]["greedy_s"] = []
+            Data[c][s]["greedy_v"] = []
+            Data[c][s]["greedy_w"] = []
 
-        for _ in range(n):
-            w, v = map(int, f.readline().split())
-            weights.append(w)
-            vals.append(v)
+            Data[c][s]["sa"] = []            
 
-        f.close()
+            for n in test_sizes:
+                # Open the test case file and read data
+                with open(f"tests/in/test_{test_nr}_{c}_{s}_n{n}.in", "r") as f:
+                    n, capacity = map(int, f.readline().split())
+                    weights = []
+                    vals = []
 
-        print(f"Test {i}:")
+                    for _ in range(n):
+                        w, v = map(int, f.readline().split())
+                        weights.append(w)
+                        vals.append(v)
 
-        # write
-        run_brute_force(weights, vals, n, capacity, i)
-        run_dp_top_down(weights, vals, n, capacity, i)
-        run_dp_bottom_up(weights, vals, n, capacity, i)
-        run_greedy(weights, vals, n, capacity, i)
-        run_branch_bound(weights, vals, n, capacity, i)
-        run_hill_climb(weights, vals, n, capacity, i)
-        run_random_restart_hill_climb(weights, vals, n, capacity, i)
+                print(f"test {test_nr}, {c}/{s}/{n}")
 
-        print()
+                # Run algorithms and store results
+                if n <= 20:
+                    bf_result = run_brute_force(weights, vals, n, capacity, test_nr)
+                    Data[c][s]["bf"].append(bf_result.toJSON())
+                else:
+                    print("brute force: skipped")
+
+                dp_td_result = run_dp_top_down(weights, vals, n, capacity, test_nr)
+                Data[c][s]["dp_td"].append(dp_td_result.toJSON())
+
+                dp_bu_rez, dp_bu_point = run_dp_bottom_up(weights, vals, n, capacity, test_nr)
+                Data[c][s]["dp_bu"].append(dp_bu_point.toJSON())
+
+                bb_rez, bb_point = run_branch_bound(weights, vals, n, capacity, test_nr)
+                Data[c][s]["bb"].append(bb_point.toJSON())
+
+                real_rez = dp_bu_rez if dp_bu_rez != -1 else bb_rez
+
+                greedy_r_result = run_greedy_ratio(weights, vals, n, capacity, test_nr, real_rez)
+                Data[c][s]["greedy_r"].append(greedy_r_result.toJSON())
+
+                greedy_s_result = run_greedy_stats(weights, vals, n, capacity, test_nr, real_rez)
+                Data[c][s]["greedy_s"].append(greedy_s_result.toJSON())
+
+                greedy_v_result = run_greedy_value(weights, vals, n, capacity, test_nr, real_rez)
+                Data[c][s]["greedy_v"].append(greedy_v_result.toJSON())
+
+                greedy_w_result = run_greedy_weight(weights, vals, n, capacity, test_nr, real_rez)
+                Data[c][s]["greedy_w"].append(greedy_w_result.toJSON())
+
+                sa_result = run_simulated_anneling(weights, vals, n, capacity, test_nr, real_rez)
+                Data[c][s]["sa"].append(sa_result.toJSON())
+
+                print()
+
+                test_nr += 1
+
+    # f = open("tests/out/data.json", "w")
+    # json.dump(Data, f, indent=4)
+
 
 
 def run_brute_force(weights, vals, n, capacity, i):
@@ -62,9 +123,13 @@ def run_brute_force(weights, vals, n, capacity, i):
 
     f.write(f"{rez}\n" f"{' '.join(map(str, sol))}\n")
 
-    print(f"brute force time: {time / NR_RUNS}")
+    duration = time / NR_RUNS
+
+    print(f"brute force time: {duration}")
 
     f.close()
+
+    return DataPoint(n, duration, 100)
 
 
 def top_down_wrapper(weights, vals, n, capacity):
@@ -77,7 +142,13 @@ def run_dp_top_down(weights, vals, n, capacity, i):
 
     f = open(f"tests/out/dp_td/test{i}.out", "w")
 
-    rez, sol = top_down_wrapper(weights, vals, n, capacity)
+    try:
+        signal.alarm(40)
+        rez, sol = top_down_wrapper(weights, vals, n, capacity)
+        signal.alarm(0)
+    except TimeoutException:
+        print("dp top down: timeout")
+        return DataPoint(n, math.inf, 0)
 
     time = timeit.timeit(
         lambda: top_down_wrapper(weights, vals, n, capacity), number=NR_RUNS
@@ -85,9 +156,13 @@ def run_dp_top_down(weights, vals, n, capacity, i):
 
     f.write(f"{rez}\n" f"{' '.join(map(str, sol))}\n")
 
-    print(f"dp top down time: {time / NR_RUNS}")
+    duration = time / NR_RUNS
+
+    print(f"dp top down time: {duration}")
 
     f.close()
+
+    return DataPoint(n, duration, 100)
 
 
 def run_dp_bottom_up(weights, vals, n, capacity, i):
@@ -95,30 +170,31 @@ def run_dp_bottom_up(weights, vals, n, capacity, i):
 
     f = open(f"tests/out/dp_bu/test{i}.out", "w")
 
-    rez, sol = bottom_up(weights, vals, n, capacity)
+    try:
+        signal.alarm(40)
+        rez, sol = bottom_up(weights, vals, n, capacity)
+        signal.alarm(0)
+    except TimeoutException:
+        print("dp bottom up: timeout")
+        return -1, DataPoint(n, math.inf, 0)
 
     time = timeit.timeit(lambda: bottom_up(weights, vals, n, capacity), number=NR_RUNS)
 
     f.write(f"{rez}\n" f"{' '.join(map(str, sol))}\n")
 
-    print(f"dp bottom up time: {time / NR_RUNS}")
+    duration = time / NR_RUNS
+
+    print(f"dp bottom up time: {duration}")
 
     f.close()
 
-
-def run_greedy(weights, vals, n, capacity, i):
-    run_greedy_ratio(weights, vals, n, capacity, i)
-    run_greedy_weight(weights, vals, n, capacity, i)
-    run_greedy_value(weights, vals, n, capacity, i)
-    run_greedy_stats(weights, vals, n, capacity, i)
+    return rez, DataPoint(n, duration, 100)
 
 
-def run_greedy_ratio(weights, vals, n, capacity, i):
+def run_greedy_ratio(weights, vals, n, capacity, i, real_rez):
     os.makedirs("tests/out/greedy_r", exist_ok=True)
 
     f = open(f"tests/out/greedy_r/test{i}.out", "w")
-
-    real_rez, _ = brute_force(weights, vals, n, capacity)
 
     rez, sol = greedy_helper(weights, vals, n, capacity, GreedyHeuristic.RATIO)
 
@@ -129,10 +205,13 @@ def run_greedy_ratio(weights, vals, n, capacity, i):
 
     f.write(f"{rez}\n" f"{' '.join(map(str, sol))}\n")
 
+    duration = time / NR_RUNS
+    accuracy = rez / real_rez * 100
+
     print(
         "greedy ratio:",
-        f"time: {time / NR_RUNS}",
-        f"accuracy: {rez / real_rez * 100}%",
+        f"time: {duration}",
+        f"accuracy: {accuracy}%",
         sep="\n",
     )
 
@@ -140,13 +219,13 @@ def run_greedy_ratio(weights, vals, n, capacity, i):
 
     f.close()
 
+    return DataPoint(n, duration, accuracy)
 
-def run_greedy_weight(weights, vals, n, capacity, i):
+
+def run_greedy_weight(weights, vals, n, capacity, i, real_rez):
     os.makedirs("tests/out/greedy_w", exist_ok=True)
 
     f = open(f"tests/out/greedy_w/test{i}.out", "w")
-
-    real_rez, _ = brute_force(weights, vals, n, capacity)
 
     rez, sol = greedy_helper(weights, vals, n, capacity, GreedyHeuristic.WEIGHT)
 
@@ -157,10 +236,13 @@ def run_greedy_weight(weights, vals, n, capacity, i):
 
     f.write(f"{rez}\n" f"{' '.join(map(str, sol))}\n")
 
+    duration = time / NR_RUNS
+    accuracy = rez / real_rez * 100
+
     print(
         "greedy weight:",
-        f"time: {time / NR_RUNS}",
-        f"accuracy: {rez / real_rez * 100}%",
+        f"time: {duration}",
+        f"accuracy: {accuracy}%",
         sep="\n",
     )
 
@@ -168,13 +250,13 @@ def run_greedy_weight(weights, vals, n, capacity, i):
 
     f.close()
 
+    return DataPoint(n, duration, accuracy)
 
-def run_greedy_value(weights, vals, n, capacity, i):
+
+def run_greedy_value(weights, vals, n, capacity, i, real_rez):
     os.makedirs("tests/out/greedy_v", exist_ok=True)
 
     f = open(f"tests/out/greedy_v/test{i}.out", "w")
-
-    real_rez, _ = brute_force(weights, vals, n, capacity)
 
     rez, sol = greedy_helper(weights, vals, n, capacity, GreedyHeuristic.VALUE)
 
@@ -185,10 +267,13 @@ def run_greedy_value(weights, vals, n, capacity, i):
 
     f.write(f"{rez}\n" f"{' '.join(map(str, sol))}\n")
 
+    duration = time / NR_RUNS
+    accuracy = rez / real_rez * 100
+
     print(
         "greedy value:",
-        f"time: {time / NR_RUNS}",
-        f"accuracy: {rez / real_rez * 100}%",
+        f"time: {duration}",
+        f"accuracy: {accuracy}%",
         sep="\n",
     )
 
@@ -196,13 +281,13 @@ def run_greedy_value(weights, vals, n, capacity, i):
 
     f.close()
 
+    return DataPoint(n, duration, accuracy)
 
-def run_greedy_stats(weights, vals, n, capacity, i):
+
+def run_greedy_stats(weights, vals, n, capacity, i, real_rez):
     os.makedirs("tests/out/greedy_s", exist_ok=True)
 
     f = open(f"tests/out/greedy_s/test{i}.out", "w")
-
-    real_rez, _ = brute_force(weights, vals, n, capacity)
 
     rez, sol = greedy_helper(weights, vals, n, capacity, GreedyHeuristic.STATS)
 
@@ -213,16 +298,21 @@ def run_greedy_stats(weights, vals, n, capacity, i):
 
     f.write(f"{rez}\n" f"{' '.join(map(str, sol))}\n")
 
+    duration = time / NR_RUNS
+    accuracy = rez / real_rez * 100
+
     print(
         "greedy stats:",
-        f"time: {time / NR_RUNS}",
-        f"accuracy: {rez / real_rez * 100}%",
+        f"time: {duration}",
+        f"accuracy: {accuracy}%",
         sep="\n",
     )
 
     print()
 
     f.close()
+
+    return DataPoint(n, duration, accuracy)
 
 
 def run_branch_bound(weights, vals, n, capacity, i):
@@ -230,7 +320,13 @@ def run_branch_bound(weights, vals, n, capacity, i):
 
     f = open(f"tests/out/bb/test{i}.out", "w")
 
-    rez, sol = branch_and_bound(weights, vals, n, capacity)
+    try:
+        signal.alarm(40)
+        rez, sol = branch_and_bound(weights, vals, n, capacity)
+        signal.alarm(0)
+    except TimeoutException:
+        print("branch and bound: timeout")
+        return -1, DataPoint(n, math.inf, 0)
 
     time = timeit.timeit(
         lambda: branch_and_bound(weights, vals, n, capacity), number=NR_RUNS
@@ -238,81 +334,55 @@ def run_branch_bound(weights, vals, n, capacity, i):
 
     f.write(f"{rez}\n" f"{' '.join(map(str, sol))}\n")
 
-    print(f"branch and bound time: {time / NR_RUNS}")
+    duration = time / NR_RUNS
+
+    print(f"branch and bound time: {duration}")
 
     print()
 
     f.close()
 
+    return rez, DataPoint(n, duration, 100)
 
-def run_hill_climb(weights, vals, n, capacity, i):
-    os.makedirs("tests/out/hc", exist_ok=True)
 
-    f = open(f"tests/out/hc/test{i}.out", "w")
+def run_simulated_anneling(weights, vals, n, capacity, i, real_rez):
+    os.makedirs("tests/out/sa", exist_ok=True)
 
-    real_rez, _ = brute_force(weights, vals, n, capacity)
+    f = open(f"tests/out/sa/test{i}.out", "w")
 
     initial_solution = generate_initial_solution(weights, n, capacity)
 
-    rez, sol, iter = hill_climb(weights, vals, n, capacity, initial_solution)
+    rez, sol = simulated_annealing(weights, vals, n, capacity, initial_solution)
 
     time = timeit.timeit(
-        lambda: hill_climb(weights, vals, n, capacity, initial_solution), number=NR_RUNS
-    )
-
-    f.write(f"{rez}\n" f"{' '.join(map(str, sol))}\n")
-
-    print(
-        "hill climb:",
-        f"time: {time / NR_RUNS}",
-        f"accuracy: {rez / real_rez * 100}%",
-        f"nr of iterations: {iter}",
-        sep="\n",
-    )
-
-    print()
-
-    f.close()
-
-
-NR_RESTARTS = 100
-
-
-def run_random_restart_hill_climb(weights, vals, n, capacity, i):
-    os.makedirs("tests/out/rrhc", exist_ok=True)
-
-    f = open(f"tests/out/rrhc/test{i}.out", "w")
-
-    real_rez, _ = brute_force(weights, vals, n, capacity)
-
-    initial_solutions = [
-        generate_initial_solution(weights, n, capacity) for _ in range(NR_RESTARTS)
-    ]
-
-    rez, sol, iter = random_restart_hill_climb(
-        weights, vals, n, capacity, NR_RESTARTS, initial_solutions
-    )
-
-    time = timeit.timeit(
-        lambda: random_restart_hill_climb(
-            weights, vals, n, capacity, NR_RESTARTS, initial_solutions
-        ),
+        lambda: simulated_annealing(weights, vals, n, capacity, initial_solution),
         number=NR_RUNS,
     )
 
     f.write(f"{rez}\n" f"{' '.join(map(str, sol))}\n")
 
+    duration = time / NR_RUNS
+    accuracy = rez / real_rez * 100
+
     print(
-        f"random restart hill climb ({NR_RESTARTS}):",
-        f"time: {time / NR_RUNS}",
-        f"accuracy: {rez / real_rez * 100}%",
-        f"best nr of iterations: {iter}",
+        "simulated annealing:",
+        f"time: {duration}",
+        f"accuracy: {accuracy}%",
         sep="\n",
     )
 
+    print()
+
     f.close()
+
+    return DataPoint(n, duration, accuracy)
 
 
 if __name__ == "__main__":
     generate_tests()
+
+    start = time.perf_counter()
     run_test()
+    end = time.perf_counter()
+
+    print(f"total time: {(end - start)/60} minutes")

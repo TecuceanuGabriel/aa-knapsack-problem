@@ -1,4 +1,5 @@
 import random
+import math
 
 
 def generate_initial_solution(weights, n, capacity):
@@ -16,7 +17,7 @@ def generate_initial_solution(weights, n, capacity):
     return initial_solution
 
 
-def hill_climb(weights, vals, n, capacity, initial_solution):
+def simulated_annealing(weights, vals, n, capacity, initial_solution):
     def evaluate(solution):
         sum_weights = sum(weights[i] if solution[i] == 1 else 0 for i in range(n))
         sum_vals = sum(vals[i] if solution[i] == 1 else 0 for i in range(n))
@@ -25,54 +26,58 @@ def hill_climb(weights, vals, n, capacity, initial_solution):
             return -1
         return sum_vals
 
-    def get_neighbors(solution):
-        neighbors = []
-
-        for i in range(n):
-            neighbor = solution[:]
-            neighbor[i] = 1 - neighbor[i]
-            neighbors.append(neighbor)
-
-        return neighbors
-
-    current_solution = initial_solution
-    current_score = evaluate(current_solution)
-
-    iter = 0
-
-    while True:
-        iter += 1
-
-        neighbors = get_neighbors(current_solution)
-        best_neighbor = max(neighbors, key=evaluate)
-        best_score = evaluate(best_neighbor)
-
-        if best_score <= current_score:  # no improvement
-            break
-
-        current_solution = best_neighbor
-        current_score = best_score
-
-    included_idx = [i for i in range(n) if current_solution[i] == 1]
-
-    return current_score, included_idx, iter
-
-
-def random_restart_hill_climb(
-    weights, vals, n, capacity, num_restarts, initial_solutions
-):
-    best_score = -1
-    best_solution = []
-    best_iter = 0
-
-    for i in range(num_restarts):
-        score, solution, iter = hill_climb(
-            weights, vals, n, capacity, initial_solutions[i]
+    def generate_neighbor(solution):
+        neighbor = solution[:]
+        current_weight = sum(
+            weights[i] if solution[i] == 1 else 0 for i in range(len(solution))
         )
 
-        if score > best_score:
-            best_score = score
-            best_solution = solution
-            best_iter = iter
+        if random.random() < 0.5:  # Try to add an item
+            # Only consider items that could fit
+            potential_adds = [
+                i
+                for i in range(len(solution))
+                if solution[i] == 0 and current_weight + weights[i] <= capacity
+            ]
+            if potential_adds:
+                idx = random.choice(potential_adds)
+                neighbor[idx] = 1
+        else:  # Remove an item
+            selected = [i for i in range(len(solution)) if solution[i] == 1]
+            if selected:
+                idx = random.choice(selected)
+                neighbor[idx] = 0
 
-    return best_score, best_solution, best_iter
+        return neighbor
+
+    # Initial temperature and cooling rate
+    temp = 1000.0
+    cooling_rate = 0.95
+    min_temp = 0.1
+
+    current_solution = initial_solution
+    current_value = evaluate(current_solution)
+
+    best_solution = current_solution[:]
+    best_value = current_value
+
+    while temp > min_temp:
+        neighbor = generate_neighbor(current_solution)
+
+        score = evaluate(neighbor)
+
+        delta = score - current_value
+
+        if delta > 0 or random.random() < math.exp(delta / temp):
+            current_solution = neighbor
+            current_value = score
+
+            if current_value > best_value:
+                best_value = current_value
+                best_solution = current_solution[:]
+
+        temp *= cooling_rate
+
+    selected_indices = [i for i in range(n) if best_solution[i]]
+
+    return best_value, selected_indices

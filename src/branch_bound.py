@@ -41,7 +41,8 @@ def branch_and_bound(weights, vals, n, capacity):
 
         # if there are still items left, add fraction of the next item
         if j < n:
-            profit_bound += (capacity - total_weight) * (vals[j] / weights[j])
+            remaining_capacity = capacity - total_weight
+            profit_bound += (remaining_capacity * vals[j]) // weights[j]
 
         return profit_bound
 
@@ -58,7 +59,7 @@ def branch_and_bound(weights, vals, n, capacity):
         node = heappop(pq)
 
         # prune
-        if node.bound <= max_profit or node.level == n - 1:
+        if node.bound <= max_profit or node.level >= n - 1:
             continue
 
         # branch
