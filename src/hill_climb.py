@@ -68,6 +68,8 @@ def simulated_annealing(weights, vals, n, capacity, initial_solution):
 
         delta = score - current_value
 
+        # if the neighbor is better, accpet it
+        # if it's worse, accpet it with a certain probability
         if delta > 0 or random.random() < math.exp(delta / temp):
             current_solution = neighbor
             current_value = score

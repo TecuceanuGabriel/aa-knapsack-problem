@@ -1,0 +1,130 @@
+         29791562 function calls (4 primitive calls) in 23.854 seconds
+
+   Ordered by: standard name
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000   23.853   23.853 <string>:1(<module>)
+29791559/1   23.853    0.000   23.853   23.853 dp.py:1(top_down)
+        1    0.000    0.000   23.854   23.854 {built-in method builtins.exec}
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+
+
+         14674429 function calls in 19.046 seconds
+
+   Ordered by: standard name
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.036    0.036   19.046   19.046 <string>:1(<module>)
+        1   17.134   17.134   19.010   19.010 dp.py:23(bottom_up)
+        1    0.000    0.000   19.046   19.046 {built-in method builtins.exec}
+ 14674006    1.876    0.000    1.876    0.000 {built-in method builtins.max}
+      419    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+
+
+         25085 function calls in 0.035 seconds
+
+   Ordered by: standard name
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.001    0.001    0.035    0.035 <string>:1(<module>)
+    11376    0.001    0.000    0.001    0.000 branch_bound.py:12(__lt__)
+        1    0.003    0.003    0.034    0.034 branch_bound.py:19(branch_and_bound)
+    10000    0.001    0.000    0.001    0.000 branch_bound.py:21(<lambda>)
+      929    0.022    0.000    0.022    0.000 branch_bound.py:24(bound)
+      929    0.000    0.000    0.000    0.000 branch_bound.py:5(__init__)
+      923    0.001    0.000    0.002    0.000 {built-in method _heapq.heappop}
+      923    0.001    0.000    0.001    0.000 {built-in method _heapq.heappush}
+        1    0.000    0.000    0.035    0.035 {built-in method builtins.exec}
+        1    0.004    0.004    0.006    0.006 {built-in method builtins.sorted}
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+
+
+         10425 function calls in 0.007 seconds
+
+   Ordered by: standard name
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.007    0.007 <string>:1(<module>)
+        1    0.002    0.002    0.007    0.007 greedy.py:11(greedy_helper)
+    10000    0.002    0.000    0.002    0.000 greedy.py:15(<lambda>)
+        1    0.000    0.000    0.000    0.000 greedy.py:64(greedy)
+        1    0.000    0.000    0.007    0.007 {built-in method builtins.exec}
+        1    0.004    0.004    0.005    0.005 {built-in method builtins.sorted}
+      419    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+
+
+         10021 function calls in 0.005 seconds
+
+   Ordered by: standard name
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.005    0.005 <string>:1(<module>)
+        1    0.001    0.001    0.004    0.004 greedy.py:11(greedy_helper)
+    10000    0.001    0.000    0.001    0.000 greedy.py:17(<lambda>)
+        1    0.000    0.000    0.000    0.000 greedy.py:64(greedy)
+        1    0.000    0.000    0.005    0.005 {built-in method builtins.exec}
+        1    0.003    0.003    0.004    0.004 {built-in method builtins.sorted}
+       15    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+
+
+         10035 function calls in 0.005 seconds
+
+   Ordered by: standard name
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.005    0.005 <string>:1(<module>)
+        1    0.001    0.001    0.004    0.004 greedy.py:11(greedy_helper)
+    10000    0.001    0.000    0.001    0.000 greedy.py:19(<lambda>)
+        1    0.000    0.000    0.000    0.000 greedy.py:64(greedy)
+        1    0.000    0.000    0.005    0.005 {built-in method builtins.exec}
+        1    0.003    0.003    0.004    0.004 {built-in method builtins.sorted}
+       29    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+
+
+         10211 function calls in 0.012 seconds
+
+   Ordered by: standard name
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.012    0.012 <string>:1(<module>)
+        1    0.001    0.001    0.012    0.012 greedy.py:11(greedy_helper)
+    10000    0.002    0.000    0.002    0.000 greedy.py:22(<lambda>)
+        1    0.004    0.004    0.005    0.005 greedy.py:29(get_coeff)
+        1    0.000    0.000    0.000    0.000 greedy.py:64(greedy)
+        1    0.000    0.000    0.012    0.012 {built-in method builtins.exec}
+        2    0.000    0.000    0.000    0.000 {built-in method builtins.max}
+        2    0.000    0.000    0.000    0.000 {built-in method builtins.min}
+        1    0.005    0.005    0.006    0.006 {built-in method builtins.sorted}
+        4    0.000    0.000    0.000    0.000 {built-in method builtins.sum}
+      196    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+
+
+         5423079 function calls in 1.455 seconds
+
+   Ordered by: standard name
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    1.454    1.454 <string>:1(<module>)
+        1    0.008    0.008    1.454    1.454 hill_climb.py:20(simulated_annealing)
+      181    0.001    0.000    0.887    0.005 hill_climb.py:21(evaluate)
+  1810181    0.219    0.000    0.219    0.000 hill_climb.py:22(<genexpr>)
+  1810181    0.218    0.000    0.218    0.000 hill_climb.py:23(<genexpr>)
+      180    0.107    0.001    0.559    0.003 hill_climb.py:29(generate_neighbor)
+  1800180    0.219    0.000    0.219    0.000 hill_climb.py:31(<genexpr>)
+      128    0.000    0.000    0.000    0.000 random.py:245(_randbelow_with_getrandbits)
+      128    0.000    0.000    0.001    0.000 random.py:345(choice)
+        1    0.000    0.000    1.455    1.455 {built-in method builtins.exec}
+      616    0.000    0.000    0.000    0.000 {built-in method builtins.len}
+      542    0.681    0.001    1.338    0.002 {built-in method builtins.sum}
+      141    0.000    0.000    0.000    0.000 {built-in method math.exp}
+      128    0.000    0.000    0.000    0.000 {method 'bit_length' of 'int' objects}
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+      168    0.000    0.000    0.000    0.000 {method 'getrandbits' of '_random.Random' objects}
+      321    0.000    0.000    0.000    0.000 {method 'random' of '_random.Random' objects}
+
+

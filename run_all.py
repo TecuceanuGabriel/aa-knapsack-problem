@@ -18,20 +18,25 @@ import sys
 import math
 import signal
 import json
+import cProfile
 
 sys.setrecursionlimit(10**6)
 
 NR_RUNS = 10
 
+
 class TimeoutException(Exception):
     pass
+
 
 def timeout_handler(signum, frame):
     raise TimeoutException("Timed out")
 
+
 signal.signal(signal.SIGALRM, timeout_handler)
 
 Data = {}
+
 
 def run_test():
     test_nr = 0
@@ -52,7 +57,7 @@ def run_test():
             Data[c][s]["greedy_v"] = []
             Data[c][s]["greedy_w"] = []
 
-            Data[c][s]["sa"] = []            
+            Data[c][s]["sa"] = []
 
             for n in test_sizes:
                 # Open the test case file and read data
@@ -78,7 +83,9 @@ def run_test():
                 dp_td_result = run_dp_top_down(weights, vals, n, capacity, test_nr)
                 Data[c][s]["dp_td"].append(dp_td_result.toJSON())
 
-                dp_bu_rez, dp_bu_point = run_dp_bottom_up(weights, vals, n, capacity, test_nr)
+                dp_bu_rez, dp_bu_point = run_dp_bottom_up(
+                    weights, vals, n, capacity, test_nr
+                )
                 Data[c][s]["dp_bu"].append(dp_bu_point.toJSON())
 
                 bb_rez, bb_point = run_branch_bound(weights, vals, n, capacity, test_nr)
@@ -86,19 +93,29 @@ def run_test():
 
                 real_rez = dp_bu_rez if dp_bu_rez != -1 else bb_rez
 
-                greedy_r_result = run_greedy_ratio(weights, vals, n, capacity, test_nr, real_rez)
+                greedy_r_result = run_greedy_ratio(
+                    weights, vals, n, capacity, test_nr, real_rez
+                )
                 Data[c][s]["greedy_r"].append(greedy_r_result.toJSON())
 
-                greedy_s_result = run_greedy_stats(weights, vals, n, capacity, test_nr, real_rez)
+                greedy_s_result = run_greedy_stats(
+                    weights, vals, n, capacity, test_nr, real_rez
+                )
                 Data[c][s]["greedy_s"].append(greedy_s_result.toJSON())
 
-                greedy_v_result = run_greedy_value(weights, vals, n, capacity, test_nr, real_rez)
+                greedy_v_result = run_greedy_value(
+                    weights, vals, n, capacity, test_nr, real_rez
+                )
                 Data[c][s]["greedy_v"].append(greedy_v_result.toJSON())
 
-                greedy_w_result = run_greedy_weight(weights, vals, n, capacity, test_nr, real_rez)
+                greedy_w_result = run_greedy_weight(
+                    weights, vals, n, capacity, test_nr, real_rez
+                )
                 Data[c][s]["greedy_w"].append(greedy_w_result.toJSON())
 
-                sa_result = run_simulated_anneling(weights, vals, n, capacity, test_nr, real_rez)
+                sa_result = run_simulated_anneling(
+                    weights, vals, n, capacity, test_nr, real_rez
+                )
                 Data[c][s]["sa"].append(sa_result.toJSON())
 
                 print()
@@ -107,7 +124,6 @@ def run_test():
 
     f = open("tests/out/data.json", "w")
     json.dump(Data, f, indent=4)
-
 
 
 def run_brute_force(weights, vals, n, capacity, i):
@@ -378,6 +394,61 @@ def run_simulated_anneling(weights, vals, n, capacity, i, real_rez):
     return DataPoint(n, capacity, duration, accuracy)
 
 
+def profile_algs():
+    f = open("tests/in/test_49_medium_random_n10000.in", "r")
+
+    n, capacity = map(int, f.readline().split())
+
+    weights = []
+    vals = []
+
+    for _ in range(n):
+        w, v = map(int, f.readline().split())
+        weights.append(w)
+        vals.append(v)
+
+    f.close()
+
+    memo = [[(-1, []) for _ in range(capacity + 1)] for _ in range(n + 1)]
+    cProfile.runctx("top_down(weights, vals, n, capacity, memo)", globals(), locals())
+
+    cProfile.runctx("bottom_up(weights, vals, n, capacity)", globals(), locals())
+
+    cProfile.runctx("branch_and_bound(weights, vals, n, capacity)", globals(), locals())
+
+    cProfile.runctx(
+        "greedy_helper(weights, vals, n, capacity, GreedyHeuristic.RATIO)",
+        globals(),
+        locals(),
+    )
+
+    cProfile.runctx(
+        "greedy_helper(weights, vals, n, capacity, GreedyHeuristic.WEIGHT)",
+        globals(),
+        locals(),
+    )
+
+    cProfile.runctx(
+        "greedy_helper(weights, vals, n, capacity, GreedyHeuristic.VALUE)",
+        globals(),
+        locals(),
+    )
+
+    cProfile.runctx(
+        "greedy_helper(weights, vals, n, capacity, GreedyHeuristic.STATS)",
+        globals(),
+        locals(),
+    )
+
+    initial_solution = generate_initial_solution(weights, n, capacity)
+
+    cProfile.runctx(
+        "simulated_annealing(weights, vals, n, capacity, initial_solution)",
+        globals(),
+        locals(),
+    )
+
+
 if __name__ == "__main__":
     generate_tests()
 
@@ -386,3 +457,5 @@ if __name__ == "__main__":
     end = time.perf_counter()
 
     print(f"total time: {(end - start)/60} minutes")
+
+    profile_algs()

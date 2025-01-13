@@ -9,7 +9,6 @@ class GreedyHeuristic(Enum):
 
 
 def greedy_helper(weight, vals, n, capacity, heuristic):
-    # combine the two lists into a list of tuples
     items = zip(weight, vals)
 
     if heuristic == GreedyHeuristic.RATIO:
@@ -22,7 +21,6 @@ def greedy_helper(weight, vals, n, capacity, heuristic):
         a, b = get_coeff(weight, vals, n, capacity)
         items = sorted(items, key=lambda x: a * x[1] - b * x[0], reverse=True)
 
-    # get the two lists back
     weights, vals = zip(*items)
 
     return greedy(weights, vals, n, capacity)

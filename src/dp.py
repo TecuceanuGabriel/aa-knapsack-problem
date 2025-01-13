@@ -1,7 +1,3 @@
-"""
-"""
-
-
 def top_down(weights, vals, n, capacity, memo):
     if n == 0 or capacity == 0:
         return 0, []

@@ -10,5 +10,5 @@ class DataPoint:
             "n": self.n,
             "capacity": self.capacity,
             "time": self.time,
-            "accuracy": self.accuracy
+            "accuracy": self.accuracy,
         }
