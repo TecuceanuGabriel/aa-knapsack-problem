@@ -29,6 +29,7 @@ python analyze_data.py
     - plot: contains the generated plots
     - data.json: the result of run_all.py
     - report.txt: result of each scenario formated as latex table
+    - profile.txt: profiling results
 
 # Tests
 
