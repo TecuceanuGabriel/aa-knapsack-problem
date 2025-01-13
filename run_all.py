@@ -129,7 +129,7 @@ def run_brute_force(weights, vals, n, capacity, i):
 
     f.close()
 
-    return DataPoint(n, duration, 100)
+    return DataPoint(n, capacity, duration, 100)
 
 
 def top_down_wrapper(weights, vals, n, capacity):
@@ -148,7 +148,7 @@ def run_dp_top_down(weights, vals, n, capacity, i):
         signal.alarm(0)
     except TimeoutException:
         print("dp top down: timeout")
-        return DataPoint(n, math.inf, 0)
+        return DataPoint(n, capacity, math.inf, 0)
 
     time = timeit.timeit(
         lambda: top_down_wrapper(weights, vals, n, capacity), number=NR_RUNS
@@ -162,7 +162,7 @@ def run_dp_top_down(weights, vals, n, capacity, i):
 
     f.close()
 
-    return DataPoint(n, duration, 100)
+    return DataPoint(n, capacity, duration, 100)
 
 
 def run_dp_bottom_up(weights, vals, n, capacity, i):
@@ -176,7 +176,7 @@ def run_dp_bottom_up(weights, vals, n, capacity, i):
         signal.alarm(0)
     except TimeoutException:
         print("dp bottom up: timeout")
-        return -1, DataPoint(n, math.inf, 0)
+        return -1, DataPoint(n, capacity, math.inf, 0)
 
     time = timeit.timeit(lambda: bottom_up(weights, vals, n, capacity), number=NR_RUNS)
 
@@ -188,7 +188,7 @@ def run_dp_bottom_up(weights, vals, n, capacity, i):
 
     f.close()
 
-    return rez, DataPoint(n, duration, 100)
+    return rez, DataPoint(n, capacity, duration, 100)
 
 
 def run_greedy_ratio(weights, vals, n, capacity, i, real_rez):
@@ -219,7 +219,7 @@ def run_greedy_ratio(weights, vals, n, capacity, i, real_rez):
 
     f.close()
 
-    return DataPoint(n, duration, accuracy)
+    return DataPoint(n, capacity, duration, accuracy)
 
 
 def run_greedy_weight(weights, vals, n, capacity, i, real_rez):
@@ -250,7 +250,7 @@ def run_greedy_weight(weights, vals, n, capacity, i, real_rez):
 
     f.close()
 
-    return DataPoint(n, duration, accuracy)
+    return DataPoint(n, capacity, duration, accuracy)
 
 
 def run_greedy_value(weights, vals, n, capacity, i, real_rez):
@@ -281,7 +281,7 @@ def run_greedy_value(weights, vals, n, capacity, i, real_rez):
 
     f.close()
 
-    return DataPoint(n, duration, accuracy)
+    return DataPoint(n, capacity, duration, accuracy)
 
 
 def run_greedy_stats(weights, vals, n, capacity, i, real_rez):
@@ -312,7 +312,7 @@ def run_greedy_stats(weights, vals, n, capacity, i, real_rez):
 
     f.close()
 
-    return DataPoint(n, duration, accuracy)
+    return DataPoint(n, capacity, duration, accuracy)
 
 
 def run_branch_bound(weights, vals, n, capacity, i):
@@ -326,7 +326,7 @@ def run_branch_bound(weights, vals, n, capacity, i):
         signal.alarm(0)
     except TimeoutException:
         print("branch and bound: timeout")
-        return -1, DataPoint(n, math.inf, 0)
+        return -1, DataPoint(n, capacity, math.inf, 0)
 
     time = timeit.timeit(
         lambda: branch_and_bound(weights, vals, n, capacity), number=NR_RUNS
@@ -342,7 +342,7 @@ def run_branch_bound(weights, vals, n, capacity, i):
 
     f.close()
 
-    return rez, DataPoint(n, duration, 100)
+    return rez, DataPoint(n, capacity, duration, 100)
 
 
 def run_simulated_anneling(weights, vals, n, capacity, i, real_rez):
@@ -375,7 +375,7 @@ def run_simulated_anneling(weights, vals, n, capacity, i, real_rez):
 
     f.close()
 
-    return DataPoint(n, duration, accuracy)
+    return DataPoint(n, capacity, duration, accuracy)
 
 
 if __name__ == "__main__":
