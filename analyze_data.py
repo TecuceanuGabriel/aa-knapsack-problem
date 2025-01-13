@@ -10,13 +10,15 @@ import seaborn as sns
 
 import json
 import os
+import math
 
 matplotlib.use('Qt5Agg')
 plt.rcParams['figure.figsize'] = [12, 8]
 # print(plt.style.available)
 plt.style.use('seaborn-v0_8-notebook')
 
-def normalize_data(data, method):
+
+def normalize_data(data, method='standard'):
     if not data:
         return data
         
@@ -47,23 +49,134 @@ def normalize_data(data, method):
         return (data / max_val) * 100
     return data
 
+
 def convert_to_datapoints(data_list):
     return [DataPoint(d["n"], d["capacity"], d["time"], d["accuracy"]) 
             for d in data_list]
 
+
 def write_results_to_report(f, capacity, scenario, algorithm_results, fig_nr):
-    f.write(f"figs {fig_nr} - {fig_nr + 2}: capacity: {capacity} - scenario: {scenario}\n")
+    """Write algorithm comparison results as three LaTeX tables."""
+    eps = 1e-8
+    f.write(f"% Results for capacity: {capacity} - scenario: {scenario} (figures {fig_nr} - {fig_nr + 2})\n\n")
+    
     algorithms = list(algorithm_results.keys())
+    exact_methods = ['dp_td', 'dp_bu', 'bb']
+    approx_methods = ['greedy_r', 'greedy_s', 'greedy_v', 'greedy_w', 'sa']
     
-    f.write("\t" + "\t".join(algorithms) + "\n")
+    problem_sizes = [(result.n, result.capacity) 
+                    for result in algorithm_results[algorithms[0]]]
     
-    for i in range(len(algorithm_results[algorithms[0]])):
-        f.write(f"n = {algorithm_results[algorithms[0]][i].n} capacity = {algorithm_results[algorithms[0]][i].capacity}\t")
-        for algo in algorithms:
+    # Exact Methods Time Table
+    f.write("\\begin{table}[H]\n")
+    f.write("\\centering\n")
+    f.write("\\caption{Execution Time Comparison (Exact Methods) - " + 
+            f"Capacity: {capacity}, Scenario: {scenario}" + 
+            "}\n")
+    f.write("\\label{tab:time_exact_" + f"cap{capacity}_" + 
+            f"{scenario}" + "}\n")
+    
+    f.write("\\begin{tabular}{|l|" + "c|" * len(exact_methods) + "}\n")
+    f.write("\\hline\n")
+    
+    f.write("n & ")
+    exact_names = [algo.replace('_', ' ').upper() for algo in exact_methods]
+    f.write(" & ".join(exact_names) + " \\\\\n")
+    f.write("\\hline\n")
+    
+    # Find best times for each problem size (exact methods)
+    best_times_exact = []
+    for i in range(len(problem_sizes)):
+        times = [algorithm_results[algo][i].time for algo in exact_methods]
+        best_times_exact.append(min(times))
+    
+    for i, size in enumerate(problem_sizes):
+        row = [f"{size[0]}"]
+        for algo in exact_methods:
             result = algorithm_results[algo][i]
-            f.write(f"t={result.time} acc={result.accuracy}\t")
-        f.write("\n")
-    f.write("\n")
+            if abs(result.time - best_times_exact[i]) < eps:
+                row.append(f"\\textbf{{{result.time:.6f}s}}")
+            else:
+                row.append(f"{result.time:.6f}" + "s" if result.time != math.inf else "inf")
+        f.write(" & ".join(row) + " \\\\\n")
+    
+    f.write("\\hline\n")
+    f.write("\\end{tabular}\n")
+    f.write("\\end{table}\n\n")
+    
+    # Approximate Methods Time Table
+    f.write("\\begin{table}[H]\n")
+    f.write("\\centering\n")
+    f.write("\\caption{Execution Time Comparison (Approximate Methods) - " + 
+            f"Capacity: {capacity}, Scenario: {scenario}" + 
+            "}\n")
+    f.write("\\label{tab:time_approx_" + f"cap{capacity}_" + 
+            f"{scenario}" + "}\n")
+    
+    f.write("\\begin{tabular}{|l|" + "c|" * len(approx_methods) + "}\n")
+    f.write("\\hline\n")
+    
+    f.write("n & ")
+    approx_names = [algo.replace('_', ' ').upper() for algo in approx_methods]
+    f.write(" & ".join(approx_names) + " \\\\\n")
+    f.write("\\hline\n")
+    
+    # Find best times for each problem size (approximate methods)
+    best_times_approx = []
+    for i in range(len(problem_sizes)):
+        times = [algorithm_results[algo][i].time for algo in approx_methods]
+        best_times_approx.append(min(times))
+    
+    for i, size in enumerate(problem_sizes):
+        row = [f"{size[0]}"]
+        for algo in approx_methods:
+            result = algorithm_results[algo][i]
+            if abs(result.time - best_times_approx[i]) < eps:
+                row.append(f"\\textbf{{{result.time:.6f}s}}")
+            else:
+                row.append(f"{result.time:.6f}s")
+        f.write(" & ".join(row) + " \\\\\n")
+    
+    f.write("\\hline\n")
+    f.write("\\end{tabular}\n")
+    f.write("\\end{table}\n\n")
+    
+    # Accuracy Table (only for approximate methods)
+    f.write("\\begin{table}[H]\n")
+    f.write("\\centering\n")
+    f.write("\\caption{Solution Quality Comparison - " + 
+            f"Capacity: {capacity}, Scenario: {scenario}" + 
+            "}\n")
+    f.write("\\label{tab:accuracy_" + f"cap{capacity}_" + 
+            f"{scenario}" + "}\n")
+    
+    f.write("\\begin{tabular}{|l|" + "c|" * len(approx_methods) + "}\n")
+    f.write("\\hline\n")
+    
+    f.write("n & ")
+    f.write(" & ".join(approx_names) + " \\\\\n")
+    f.write("\\hline\n")
+    
+    # Find best accuracies for each problem size
+    best_accuracies = []
+    for i in range(len(problem_sizes)):
+        accuracies = [algorithm_results[algo][i].accuracy for algo in approx_methods]
+        best_accuracies.append(max(accuracies))
+    
+    for i, size in enumerate(problem_sizes):
+        row = [f"{size[0]}"]
+        for algo in approx_methods:
+            result = algorithm_results[algo][i]
+            if abs(result.accuracy - best_accuracies[i]) < eps:
+                row.append(f"\\textbf{{{result.accuracy:.2f}\\%}}")
+            else:
+                row.append(f"{result.accuracy:.2f}\\%")
+        f.write(" & ".join(row) + " \\\\\n")
+    
+    f.write("\\hline\n")
+    f.write("\\end{tabular}\n")
+    f.write("\\end{table}\n\n")
+
 
 def plot_time_comparison(algorithm_results, capacity, scenario, fig_nr):
     plt.figure(fig_nr)
@@ -97,7 +210,8 @@ def plot_time_comparison(algorithm_results, capacity, scenario, fig_nr):
     plt.xlabel("n (problem size)")
     plt.ylabel("Normalized Time (s)")
     plt.grid(True, alpha=0.3)
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    # plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.legend()
     plt.tight_layout()
 
     plt.savefig(f"tests/out/plots/{fig_nr}_{capacity}_{scenario}_time_comparison.svg", format='svg', bbox_inches='tight', dpi=1200)
@@ -154,7 +268,8 @@ def plot_efficiency_comparison(algorithm_results, capacity, scenario, fig_nr):
     plt.xlabel("n (problem size)")
     plt.ylabel("Normalized Efficiency (accuracy / time = % / s)")
     plt.grid(True, alpha=0.3)
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    # plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.legend()
     plt.tight_layout()
 
     plt.savefig(f"tests/out/plots/{fig_nr + 2}_{capacity}_{scenario}_efficiency_comparison.svg", format='svg', bbox_inches='tight', dpi=1200)

@@ -21,7 +21,7 @@ import json
 
 sys.setrecursionlimit(10**6)
 
-NR_RUNS = 5
+NR_RUNS = 10
 
 class TimeoutException(Exception):
     pass
@@ -105,8 +105,8 @@ def run_test():
 
                 test_nr += 1
 
-    # f = open("tests/out/data.json", "w")
-    # json.dump(Data, f, indent=4)
+    f = open("tests/out/data.json", "w")
+    json.dump(Data, f, indent=4)
 
 
 
