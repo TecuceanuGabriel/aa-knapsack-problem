@@ -1,3 +1,5 @@
+https://github.com/TecuceanuGabriel/aa-knapsack-problem
+
 # Installation
 
 To install the required packages run:
